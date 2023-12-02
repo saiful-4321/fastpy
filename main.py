@@ -14,13 +14,31 @@ def index():
     }
 
 @app.get('/blogs/{id}')
-def show_blog(id):
+def show_blog(id: int):
     return {
         'page': 'single blog',
         'id': id,
         'data': {
             'title': 'blog 1',
-            'details': 'This is the details for blog no: ' + id
+            'details': 'This is the details for blog no: ' + str(id)
+        }
+    }
+
+@app.get('/blogs/{id}/comments')
+def comments(id: int): 
+    return {
+        'page': 'comments',
+        'blog': {
+            'id': id,
+            'title': 'title for blog' + str(id)
+        },
+        'comments': {
+            'data': [
+                { 
+                    'id': 1,
+                    'comment': 'nice blog'
+                }
+            ]
         }
     }
 

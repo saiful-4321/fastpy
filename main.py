@@ -13,6 +13,16 @@ def index():
         'status': 200
     }
 
+@app.get('/blogs/unpublished')
+def unpublished(): 
+    return {
+        'page': 'Unpublished blog',
+        'data': {
+            'name': 'showing all unpublished blog'
+        }
+    }
+
+
 @app.get('/blogs/{id}')
 def show_blog(id: int):
     return {

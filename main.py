@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI
 app = FastAPI()
 
@@ -12,6 +13,14 @@ def index():
         },
         'status': 200
     }
+
+@app.get('/blogs')
+def filtered_blogs(limit: int = 10, published: bool = True, sort: Optional[str] = ''): 
+    if published:
+        return { 'page': f'{limit} published blogs from the {sort} list' }
+    else:
+        return { 'page': f'{limit} blogs from the {sort} list' }
+    
 
 @app.get('/blogs/unpublished')
 def unpublished(): 

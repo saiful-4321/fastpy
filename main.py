@@ -40,3 +40,13 @@ async def createposts(post: Post):
     post_dict['id'] = randrange(0, 10000000)
     all_posts.append(post_dict)
     return {'data': all_posts}
+
+def find_post(id):
+    for post in all_posts:
+        if post['id'] == id:
+            return post
+
+@app.post("/posts/{id}")
+async def get_post(id: int):
+    post = find_post(id)
+    return {"post": post}

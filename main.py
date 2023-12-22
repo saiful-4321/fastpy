@@ -5,18 +5,35 @@ from typing import Optional
 
 app = FastAPI()
 
+all_posts = [
+    {
+        "id": 1,
+        "title": "Title for post 1",
+        "content": "Content of post 1",
+        "published": True
+    },
+    {
+        "id": 2,
+        "title": "Title for post 2",
+        "content": "Content of post 2",
+        "published": False
+    },
+]
+
 @app.get("/")
 async def root():
     return {"message": "Hello world"}
-
-
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True
     rating: Optional[int] = None
 
-@app.post("/createposts")
+@app.get("/posts")
+def get_posts():
+    return {'data': all_posts}
+
+@app.post("/posts")
 def createposts(post: Post):
     print(post.rating)
     print(post.dict())

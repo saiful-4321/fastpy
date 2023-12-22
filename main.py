@@ -46,7 +46,12 @@ def find_post(id):
         if post['id'] == id:
             return post
 
-@app.post("/posts/{id}")
+@app.get("/post/latest")
+async def get_latest_post():
+    post = all_posts[len(all_posts)-1]
+    return {"Post": post}
+
+@app.get("/posts/{id}")
 async def get_post(id: int):
     post = find_post(id)
     return {"post": post}

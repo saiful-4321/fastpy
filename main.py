@@ -8,6 +8,12 @@ app = FastAPI()
 async def root():
     return {"message": "Hello world"}
 
+
+class Post(BaseModel):
+    title: str
+    content: str
+
 @app.post("/createposts")
-def createposts(payload: dict = Body(...)):
-    return payload
+def createposts(post: Post):
+    print(post)
+    return {"data": post}

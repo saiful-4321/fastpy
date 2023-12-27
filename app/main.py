@@ -2,7 +2,7 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from sqlalchemy.orm import Session 
 from .models.Post import Post
 from .database import Base, engine, get_db
-from .schemas import PostSchema
+from .schemas import PostCreate, PostUpdate
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -20,7 +20,7 @@ def get_posts(db: Session = Depends(get_db)):
         )
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def create_posts(post: PostSchema, db: Session = Depends(get_db)):
+async def create_posts(post: PostCreate, db: Session = Depends(get_db)):
     try: 
         new_post = Post(**post.model_dump())
         db.add(new_post)
@@ -70,7 +70,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
         )
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: PostSchema, db: Session=Depends(get_db)):
+def update_post(id: int, post: PostUpdate, db: Session=Depends(get_db)):
     try: 
         post_query = db.query(Post).filter(Post.id == id)
         if post_query.first() is None:

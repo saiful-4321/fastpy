@@ -26,9 +26,15 @@ all_posts = [
 
 @app.get("/posts")
 def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(Post).all()
-    return {'data': posts}
-
+    try: 
+        posts = db.query(Post).all()
+        return {'data': posts}
+    except Exception as ex:
+        print(f"An error occurred: {ex}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(ex)}"
+        )
 class PostSchema(BaseModel):
     title: str
     content: str
@@ -36,11 +42,19 @@ class PostSchema(BaseModel):
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 async def create_posts(post: PostSchema, db: Session = Depends(get_db)):
-    new_post = Post(**post.model_dump())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    return {'data': new_post}
+    try: 
+        new_post = Post(**post.model_dump())
+        db.add(new_post)
+        db.commit()
+        db.refresh(new_post)
+        return {'data': new_post}
+    except Exception as ex:
+        db.rollback()
+        print(f"An error occurred: {ex}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(ex)}"
+        )
 
 # @app.get("/post/latest")
 # async def get_latest_post():
@@ -68,21 +82,37 @@ async def get_post(id: int, db: Session = Depends(get_db)):
 #         if post['id'] == id:
 #             return index
 
-# @app.delete("/posts/{id}")
-# async def delete_post(id: int):
-#     index = find_index_post(id=id)
-#     if index == None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with that id: {id} does not exists")
-#     all_posts.pop(index)
-#     return {'message': 'Post successfully removed'}
-
-# @app.put("/posts/{id}")
-# def update_post(id: int, post: Post):
-#     index = find_index_post(id)
-#     if index == None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {id} does not exists")
-    
-#     post_dict = post.dict()
-#     post_dict['id'] = id
-#     all_posts[index] = post_dict
-#     return {'data': post_dict}
+@app.delete("/posts/{id}")
+async def delete_post(id: int, db: Session = Depends(get_db)):
+    try: 
+        post = db.query(Post).filter(Post.id == id)
+        if post.first() is None:
+            return {"message": f"Post with ID {id} not found", "data": {}}
+        
+        post.delete(synchronize_session=False)
+        db.commit()
+        return {'message': 'Post successfully removed'}
+    except Exception as ex:
+        db.rollback()
+        print(f"An error occurred: {ex}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(ex)}"
+        )
+@app.put("/posts/{id}")
+def update_post(id: int, post: PostSchema, db: Session=Depends(get_db)):
+    try: 
+        post_query = db.query(Post).filter(Post.id == id)
+        if post_query.first() is None:
+            return {"message": f"Post with ID {id} not found", "data": {}}
+        
+        post_query.update(post.model_dump(), synchronize_session=False)
+        db.commit()
+        return {'message': 'Post successfully Updated', 'data': post_query.first()}
+    except Exception as ex:
+        db.rollback()
+        print(f"An error occurred: {ex}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(ex)}"
+        )

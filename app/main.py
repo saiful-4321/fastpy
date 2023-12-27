@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session 
 # from fastapi.params import Body
 from typing import Optional
+from pydantic import BaseModel
 from .models.Post import Post
 from .database import Base, engine, get_db
 Base.metadata.create_all(bind=engine)
@@ -28,23 +29,23 @@ def get_posts(db: Session = Depends(get_db)):
     posts = db.query(Post).all()
     return {'data': posts}
 
-# class Post(BaseModel):
-#     title: str
-#     content: str
-#     published: bool = True
-#     rating: Optional[int] = None
+class PostSchema(BaseModel):
+    title: str
+    content: str
+    is_published: bool = True
 
-# @app.post("/posts", status_code=status.HTTP_201_CREATED)
-# async def createposts(post: Post):
-#     post_dict = post.dict()
-#     post_dict['id'] = randrange(0, 10000000)
-#     all_posts.append(post_dict)
-#     return {'data': all_posts}
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
+async def create_posts(post: PostSchema, db: Session = Depends(get_db)):
+    new_post = Post(**post.model_dump())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return {'data': new_post}
 
-# def find_post(id):
-#     for post in all_posts:
-#         if post['id'] == id:
-#             return post
+def find_post(id):
+    for post in all_posts:
+        if post['id'] == id:
+            return post
 
 # @app.get("/post/latest")
 # async def get_latest_post():

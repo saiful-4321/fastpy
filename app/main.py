@@ -42,24 +42,26 @@ async def create_posts(post: PostSchema, db: Session = Depends(get_db)):
     db.refresh(new_post)
     return {'data': new_post}
 
-def find_post(id):
-    for post in all_posts:
-        if post['id'] == id:
-            return post
-
 # @app.get("/post/latest")
 # async def get_latest_post():
 #     post = all_posts[len(all_posts)-1]
 #     return {"Post": post}
 
-# @app.get("/posts/{id}")
-# async def get_post(id: int, response: Response):
-#     post = find_post(id)
-#     if not post:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with Id: {id} was not found")
-#         # response.status_code = status.HTTP_404_NOT_FOUND
-#         # return {"message": f"post with Id: {id} was not found"}
-#     return {"post": post}
+@app.get("/posts/{id}")
+async def get_post(id: int, db: Session = Depends(get_db)):
+    try:
+        post = db.query(Post).filter(Post.id == id).first()
+        
+        if not post:
+            return {"message": f"Post with ID {id} not found", "data": {}}
+        
+        return {"message": "Success", "data": post}
+    except Exception as ex:
+        print(f"An error occurred: {ex}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(ex)}"
+        )
 
 # def find_index_post(id: int):
 #     for index, post in enumerate(all_posts):
